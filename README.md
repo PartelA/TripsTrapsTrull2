@@ -1,2 +1,2 @@
-# TripsTrapsTrull2
-OOPi Rühmatöö projekti II etapp
+# OOP rühmatöö 2
+See repositoorium sisaldab Intellij töökeskkonnas arendatavat teist rühmatöö projekti "Trip Traps Trull". Projekt koosneb Peaklassist, kus programm tuleb käivitada, ja abiklassidest, mis pakuvad programmi tööks vajalikku funktsionaalsust, sh erindid ja failist lugemine/faili kirjutamine. JavaFX visuaalse poole loomisel on rakendatud tehisaru, ülejäänud projekt on autorite enda kirjutatud
