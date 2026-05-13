@@ -76,21 +76,45 @@ public class Rakendus extends Application {
         //Loome sündmuste kuulajad, mis kasutaja tegevustele reageerivad. Mängulauale käigu lisamine on implementeeritud mängulaua ruudu loomise sees
 
         //KASUTAJA SISENDILE REAGEERIMINE
-        nupp.setOnMouseClicked( e -> {
-            String kasutajaSisend = valideeriSisend(sisestus.getText());
-            sisestus.setText("");
-            if (kasutajaSisend.equals("U")) {
-                sissetulevTekst.setText("Mäng algas! Võid mängida või valida järgmise tegevus.\nVali kas soovid (L)aadida failist pooleli olevat mängu, praegust mängu (S)alvestada või (U)ut mängu alustada\n");
-                //Teeme laua tühjaks ka
-                for (Node ruut : mangulaud.getChildren()) {
-                    StackPane ruuduSees = (StackPane) ruut;
-                    Label mark = (Label) ruuduSees.getChildren().get(0);
-                    mark.setText("");
+        nupp.setOnMouseClicked(e -> {
+            try {
+                String kasutajaSisend = valideeriSisend(sisestus.getText());
+                sisestus.setText("");
+
+                if (kasutajaSisend.equals("U")) {
+                    sissetulevTekst.setText("Mäng algas! Võid mängida või valida järgmise tegevuse.\nVali kas soovid (L)aadida failist pooleli olevat mängu, praegust mängu (S)alvestada või (U)ut mängu alustada\n");
+                    tühjendaLaud();
+                    viimaneKaik = 'X';
+                    kelleKord.setText("Mängija X kord");
+
+                } else if (kasutajaSisend.equals("L")) {
+                    //failist lugemine
+                    try {
+                        FailiHaldur.MänguSeis seis = FailiHaldur.loe();
+                        rakendaLaudGUI(seis.laud);
+                        viimaneKaik = seis.viimaneKaik;
+                        char järgmine = (viimaneKaik == 'X') ? 'O' : 'X';
+                        kelleKord.setText("Mängija " + järgmine + " kord");
+                        sissetulevTekst.setText("Mäng laaditi failist edukalt!\nVali kas soovid praegust mängu (S)alvestada või (U)ut mängu alustada\n");
+                    } catch (FailiPoleErind fpe) {
+                        sissetulevTekst.setText("Viga: " + fpe.getMessage() + "\n");
+                    } catch (IOException ioe) {
+                        sissetulevTekst.setText("Faili lugemine ebaõnnestus: " + ioe.getMessage() + "\n");
+                    }
+
+                } else if (kasutajaSisend.equals("S")) {
+                    //faili salvestamine
+                    try {
+                        String[][] laud = loeLaudGUIst();
+                        FailiHaldur.salvesta(laud, viimaneKaik);
+                        sissetulevTekst.setText("Mäng salvestati edukalt faili!\nVali kas soovid (L)aadida failist pooleli olevat mängu või (U)ut mängu alustada\n");
+                    } catch (IOException ioe) {
+                        sissetulevTekst.setText("Faili salvestamine ebaõnnestus: " + ioe.getMessage() + "\n");
+                    }
                 }
-            } else if (kasutajaSisend.equals("L")) {
-                //failist Lugemine
-            } else {
-                //faili Salvestamine
+            } catch (TundmatuSisendErind tse) {
+                sissetulevTekst.setText("Viga: " + tse.getMessage() + "\n");
+                sisestus.setText("");
             }
         });
 
@@ -132,11 +156,46 @@ public class Rakendus extends Application {
         return ruut;
     }
 
-    //Kasutajalt sisendit
-    private String valideeriSisend(String a) {
-        a = a.strip();
-        //if (!(a.equals("S") || a.equals("L") || a.equals("U"))) throw new TundmatuSisendErind("Kasutaja sisestatud '" +  a + "' ei vasta ühelegi valikule ('S', 'L', 'U'"); SEE ERIND TULEB KINNI PÜÜDA SISENDI VÕTMISE KOHAS, KUS ANTUD MEETOD VÄLJA KUTSUTAKSE
+    //kasutajalt sisend
+    private String valideeriSisend(String a) throws TundmatuSisendErind{
+        a = a.strip().toUpperCase();
+        if (!(a.equals("S") || a.equals("L") || a.equals("U"))) {
+            throw new TundmatuSisendErind("Kasutaja sisestatud '" + a + "' ei vasta ühelegi valikule ('S', 'L', 'U')");
+        }
         return a;
+    }
+
+    //tühjendab mängulaua GUI ruudud
+    private void tühjendaLaud() {
+        for (Node ruut : mangulaud.getChildren()) {
+            StackPane ruuduSees = (StackPane) ruut;
+            Label mark = (Label) ruuduSees.getChildren().get(0);
+            mark.setText("");
+        }
+    }
+
+    //loeb GUI mängulaualt seisu 2D massiivi
+    private String[][] loeLaudGUIst() {
+        String[][] laud = new String[3][3];
+        for (Node ruut : mangulaud.getChildren()) {
+            StackPane ruuduSees = (StackPane) ruut;
+            Label mark = (Label) ruuduSees.getChildren().get(0);
+            int veerg = GridPane.getColumnIndex(ruut);
+            int rida = GridPane.getRowIndex(ruut);
+            laud[veerg][rida] = mark.getText();
+        }
+        return laud;
+    }
+
+    //rakendab 2D massiivist seisu GUI mängulaualt
+    private void rakendaLaudGUI(String[][] laud) {
+        for (Node ruut : mangulaud.getChildren()) {
+            StackPane ruuduSees = (StackPane) ruut;
+            Label mark = (Label) ruuduSees.getChildren().get(0);
+            int veerg = GridPane.getColumnIndex(ruut);
+            int rida = GridPane.getRowIndex(ruut);
+            mark.setText(laud[veerg][rida]);
+        }
     }
 
     //Kontrollime mängulaua praegust seisu, rakendatakse pärast iga vajutust
